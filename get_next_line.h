@@ -6,12 +6,12 @@
 /*   By: pkieszek <pkieszek@student.42warsaw.pl>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/19 02:34:13 by pkieszek          #+#    #+#             */
-/*   Updated: 2025/02/19 02:39:31 by pkieszek         ###   ########.fr       */
+/*   Updated: 2025/02/19 15:24:30 by pkieszek         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef GET_NEXT_LINE_H
-#define GET_NEXT_LINE_H
+# define GET_NEXT_LINE_H
 
 # ifndef BUFFER_SIZE
 #  define BUFFER_SIZE 42  // Default buffer size if not defined
