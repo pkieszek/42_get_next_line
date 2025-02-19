@@ -6,7 +6,7 @@
 /*   By: pkieszek <pkieszek@student.42warsaw.pl>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/19 02:34:01 by pkieszek          #+#    #+#             */
-/*   Updated: 2025/02/19 16:22:01 by pkieszek         ###   ########.fr       */
+/*   Updated: 2025/02/19 16:23:49 by pkieszek         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,8 @@ char *ft_strjoin(char *s1, char *s2)
     if (s1)
     {
         while (s1[i])
-            new_str[i] = s1[i++];
+            new_str[i] = s1[i];
+i++;
         free(s1);
     }
     while (s2[j])
