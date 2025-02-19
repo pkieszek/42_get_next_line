@@ -6,128 +6,136 @@
 /*   By: pkieszek <pkieszek@student.42warsaw.pl>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/19 02:33:42 by pkieszek          #+#    #+#             */
-/*   Updated: 2025/02/19 23:53:54 by pkieszek         ###   ########.fr       */
+/*   Updated: 2025/02/20 00:00:54 by pkieszek         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
 /* 
-	read_buf:
-	- Reads a chunk of data from the file descriptor (fd) into the buffer (buf).
+	read_buffer:
+	- Reads a chunk of data from the file into the buffer (temporary storage).
 	- If the read operation reaches the end of the file (EOF) 
-	  or encounters an error, it frees the stored string (*str) and returns 0.
+	  or encounters an error, it frees the stored text and returns 0.
 	- Otherwise, it null-terminates the buffer and returns 1 to indicate success.
 */
-static int	read_buf(int fd, char **str, char *buf)
+static int	read_buffer(int file_descriptor, char **saved_text, char *buffer)
 {
 	ssize_t	bytes_read;
 
-	bytes_read = read(fd, buf, BUFFER_SIZE);
-	if (bytes_read == 0 && (**str))
+	bytes_read = read(file_descriptor, buffer, BUFFER_SIZE);
+	if (bytes_read == 0 && (**saved_text))
 		return (0);
 	if (bytes_read <= 0)
 	{
-		free(*str);
-		*str = NULL;
+		free(*saved_text);
+		*saved_text = NULL;
 		return (0);
 	}
-	buf[bytes_read] = '\0';
+	buffer[bytes_read] = '\0';
 	return (1);
 }
 
 /* 
-	alloc_str:
-	- Allocates memory for a new string that contains:
-	  (1) the existing content of old_chunk_str
-	  (2) a portion of buf starting from 'start' with a length of 'len'
-	- If memory allocation fails, old_chunk_str is freed and NULL is returned.
+	allocate_text:
+	- Creates a new string by combining:
+	  (1) the existing stored text
+	  (2) a portion of the buffer starting at 'start_position' 
+	      with 'length' characters
+	- If memory allocation fails, the existing text is freed, 
+	  and NULL is returned.
 */
-static char	*alloc_str(char *old_chunk_str, char *buf, ssize_t start,
-				ssize_t len)
+static char	*allocate_text(char *previous_text, char *buffer,
+				ssize_t start_position, ssize_t length)
 {
 	ssize_t	i;
-	char	*new_str;
+	char	*new_text;
 
-	new_str = (char *)malloc(sizeof(char)
-			* (str_len(old_chunk_str) + len + 1));
-	if (!new_str)
+	new_text = (char *)malloc(sizeof(char)
+			* (str_len(previous_text) + length + 1));
+	if (!new_text)
 	{
-		free(old_chunk_str);
+		free(previous_text);
 		return (NULL);
 	}
 	i = 0;
-	while (old_chunk_str[i])
+	while (previous_text[i])
 	{
-		new_str[i] = old_chunk_str[i];
+		new_text[i] = previous_text[i];
 		i++;
 	}
-	free(old_chunk_str);
-	new_str[i + len] = '\0';
-	while (len)
+	free(previous_text);
+	new_text[i + length] = '\0';
+	while (length)
 	{
-		len--;
-		new_str[i + len] = buf[start + len];
+		length--;
+		new_text[i + length] = buffer[start_position + length];
 	}
-	return (new_str);
+	return (new_text);
 }
 
 /* 
-	add_chunk:
-	- Appends a new portion of the buffer to chunk_str.
+	add_to_stored_text:
+	- Appends a new portion of the buffer to the stored text.
 	- If allocation fails, returns 0 (error).
-	- Otherwise, resets line_start and line_len, then returns 1 (success).
+	- Otherwise, resets the position and length, then returns 1 (success).
 */
-static int	add_chunk(char **chunk_str, char *buf, ssize_t *line_start,
-		ssize_t *line_len)
+static int	add_to_stored_text(char **stored_text, char *buffer,
+				ssize_t *position_in_buffer, ssize_t *line_length)
 {
-	*chunk_str = alloc_str(*chunk_str, buf, *line_start,
-			BUFFER_SIZE - *line_start);
-	if (!*chunk_str)
+	*stored_text = allocate_text(*stored_text, buffer, *position_in_buffer,
+			BUFFER_SIZE - *position_in_buffer);
+	if (!*stored_text)
 		return (0);
-	*line_start = 0;
-	*line_len = 0;
+	*position_in_buffer = 0;
+	*line_length = 0;
 	return (1);
 }
 
 /* 
-	complete_line:
-	- Adds the portion of the buffer containing a full line to 'line'.
-	- Updates line_start to the position after the newline.
+	extract_complete_line:
+	- Extracts the portion of the buffer containing a full line 
+	  and adds it to 'line'.
+	- Updates position_in_buffer to point after the newline.
 */
-static char	*complete_line(char *line, char *buf, ssize_t *line_start,
-		ssize_t *line_len)
+static char	*extract_complete_line(char *line, char *buffer,
+				ssize_t *position_in_buffer, ssize_t *line_length)
 {
-	line = alloc_str(line, buf, *line_start, *line_len);
-	*line_start += *line_len;
-	*line_len = 0;
+	line = allocate_text(line, buffer, *position_in_buffer, *line_length);
+	*position_in_buffer += *line_length;
+	*line_length = 0;
 	return (line);
 }
 
 /* 
 	get_next_line:
-	- Reads from the file descriptor (fd) line by line.
+	- Reads from the file line by line.
 	- Uses a static buffer to store data across function calls.
-	- Keeps track of where it left off with line_start.
+	- Keeps track of where it left off in the buffer.
 	- Returns a single line each time it is called.
 */
-char	*get_next_line(int fd)
+char	*get_next_line(int file_descriptor)
 {
-	char			*full_line;
-	static char		buf[BUFFER_SIZE + 1];
-	static ssize_t	line_start = 0;
-	static ssize_t	len = 0;
+	char			*complete_line_text;
+	static char		buffer[BUFFER_SIZE + 1];
+	static ssize_t	position_in_buffer = 0;
+	static ssize_t	line_length = 0;
 
-	if (fd < 0 || BUFFER_SIZE <= 0 || !create_empty_line(&full_line))
+	if (file_descriptor < 0 || BUFFER_SIZE <= 0
+		|| !create_empty_line(&complete_line_text))
 		return (NULL);
-	while (!len)
+	while (!line_length)
 	{
-		if (!line_start && !read_buf(fd, &full_line, buf))
-			return (full_line);
-		len = find_newline(buf, line_start) - line_start;
-		if (len > 0)
-			return (complete_line(full_line, buf, &line_start, &len));
-		else if (!add_chunk(&full_line, buf, &line_start, &len))
+		if (!position_in_buffer && !read_buffer(file_descriptor,
+				&complete_line_text, buffer))
+			return (complete_line_text);
+		line_length = find_newline(buffer, position_in_buffer)
+			- position_in_buffer;
+		if (line_length > 0)
+			return (extract_complete_line(complete_line_text, buffer,
+					&position_in_buffer, &line_length));
+		else if (!add_to_stored_text(&complete_line_text, buffer,
+				&position_in_buffer, &line_length))
 			return (NULL);
 	}
 	return (NULL);
