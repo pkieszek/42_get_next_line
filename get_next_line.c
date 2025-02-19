@@ -6,96 +6,92 @@
 /*   By: pkieszek <pkieszek@student.42warsaw.pl>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/19 02:33:42 by pkieszek          #+#    #+#             */
-/*   Updated: 2025/02/19 17:09:06 by pkieszek         ###   ########.fr       */
+/*   Updated: 2025/02/19 22:45:32 by pkieszek         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-/*
- * Reads from the file descriptor and appends the data to the buffer.
- * Ensures memory safety and avoids buffer overflows.
- */
-static char *read_and_store(int fd, char *buffer)
+/* Reads and appends data to the buffer safely */
+static int read_and_store(int fd, char **buffer)
 {
     char temp_buffer[BUFFER_SIZE + 1];
     ssize_t bytes_read;
+    char *new_buffer;
 
-    if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, NULL, 0) < 0)
-        return (NULL);
-    
+    if (!buffer || fd < 0 || BUFFER_SIZE <= 0)
+        return (0);
+
     bytes_read = read(fd, temp_buffer, BUFFER_SIZE);
     if (bytes_read <= 0)
-        return (NULL);
+        return (0);
     
     temp_buffer[bytes_read] = '\0';
-    return (ft_strjoin(buffer, temp_buffer));
+    new_buffer = ft_strjoin(*buffer, temp_buffer);
+    free(*buffer);
+    *buffer = new_buffer;
+    return (*buffer != NULL);
 }
 
-/*
- * Extracts a single line from the buffer safely.
- * Ensures allocated memory is initialized properly.
- */
+/* Extracts a single line from buffer */
 static char *extract_line(char *buffer)
 {
-    char *line;
     size_t len = 0;
-
+    char *line;
+    
     if (!buffer || buffer[0] == '\0')
         return (NULL);
     
     while (buffer[len] && buffer[len] != '\n')
         len++;
     
-    line = (char *)malloc(len + 2);
+    line = (char *)malloc(len + (buffer[len] == '\n' ? 2 : 1));
     if (!line)
         return (NULL);
     
-    ft_strlcpy(line, buffer, len + 2);
+    ft_strlcpy(line, buffer, len + (buffer[len] == '\n' ? 2 : 1));
     return (line);
 }
 
-/*
- * Trims the buffer by removing the extracted line.
- * Ensures that old buffer memory is freed properly.
- */
-static char *trim_buffer(char *buffer)
+/* Trims the buffer after extracting a line */
+static void trim_buffer(char **buffer)
 {
     char *new_buffer;
     char *newline_pos;
 
-    if (!buffer)
-        return (NULL);
+    if (!*buffer)
+        return;
     
-    newline_pos = ft_strchr(buffer, '\n');
+    newline_pos = ft_strchr(*buffer, '\n');
     if (!newline_pos)
     {
-        free(buffer);
-        return (NULL);
+        free(*buffer);
+        *buffer = NULL;
+        return;
     }
     
     new_buffer = ft_strdup(newline_pos + 1);
-    free(buffer);
-    return (new_buffer);
+    free(*buffer);
+    *buffer = new_buffer;
 }
 
-/*
- * The main function to retrieve the next line from the file descriptor.
- * Manages a static buffer to store remaining data.
- */
+/* Main function to get the next line */
 char *get_next_line(int fd)
 {
-    static char *buffer;
+    static char *buffer = NULL;
     char *line;
 
-    if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, NULL, 0) < 0)
+    if (fd < 0 || BUFFER_SIZE <= 0)
         return (NULL);
     
-    buffer = read_and_store(fd, buffer);
-    if (!buffer)
+    if (!read_and_store(fd, &buffer))
+    {
+        free(buffer);
+        buffer = NULL;
         return (NULL);
+    }
     
     line = extract_line(buffer);
-    buffer = trim_buffer(buffer);
+    trim_buffer(&buffer);
     return (line);
 }
