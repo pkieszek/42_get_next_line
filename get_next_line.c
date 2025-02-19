@@ -6,7 +6,7 @@
 /*   By: pkieszek <pkieszek@student.42warsaw.pl>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/19 02:33:42 by pkieszek          #+#    #+#             */
-/*   Updated: 2025/02/19 23:49:56 by pkieszek         ###   ########.fr       */
+/*   Updated: 2025/02/19 23:53:54 by pkieszek         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,8 @@
 /* 
 	read_buf:
 	- Reads a chunk of data from the file descriptor (fd) into the buffer (buf).
-	- If the read operation reaches the end of the file (EOF) or encounters an error, 
-	  it frees the stored string (*str) and returns 0.
+	- If the read operation reaches the end of the file (EOF) 
+	  or encounters an error, it frees the stored string (*str) and returns 0.
 	- Otherwise, it null-terminates the buffer and returns 1 to indicate success.
 */
 static int	read_buf(int fd, char **str, char *buf)
