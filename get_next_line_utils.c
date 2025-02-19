@@ -6,108 +6,53 @@
 /*   By: pkieszek <pkieszek@student.42warsaw.pl>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/19 02:34:01 by pkieszek          #+#    #+#             */
-/*   Updated: 2025/02/19 17:10:23 by pkieszek         ###   ########.fr       */
+/*   Updated: 2025/02/19 23:34:58 by pkieszek         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
 /*
- * Returns the length of a string.
- * Ensures safe access to the pointer before iteration.
+ * Calculates the length of a string.
+ * Iterates through the string until it reaches the null terminator.
+ * Returns the total length of the string.
  */
-size_t ft_strlen(const char *s)
+ssize_t	str_len(const char *s)
 {
-    size_t len = 0;
-    while (s && s[len])
-        len++;
-    return (len);
+	ssize_t	i;
+
+	i = 0;
+	while (s[i])
+		i++;
+	return (i);
 }
 
 /*
- * Finds the first occurrence of a character in a string.
- * Ensures that `s` is not NULL before accessing it.
+ * Allocates memory for an empty string.
+ * The function ensures that `str` is assigned to a valid memory block.
+ * Returns 1 on success, and 0 if memory allocation fails.
  */
-char *ft_strchr(const char *s, int c)
+int	create_empty_line(char **str)
 {
-    if (!s)
-        return (NULL);
-    while (*s)
-    {
-        if (*s == (char)c)
-            return ((char *)s);
-        s++;
-    }
-    return (NULL);
+	*str = malloc(1);
+	if (!*str)
+		return (0);
+	(*str)[0] = '\0';
+	return (1);
 }
 
 /*
- * Concatenates two strings into a new buffer.
- * Ensures safe memory allocation and avoids buffer overflow.
+ * Finds the position of the first newline character ('\n') in a buffer.
+ * Iterates through the buffer and returns the position index +1 if found.
+ * If no newline is found, returns 0.
  */
-char *ft_strjoin(char *s1, char *s2)
+ssize_t	find_newline(char *buf, ssize_t i)
 {
-    size_t len1 = s1 ? ft_strlen(s1) : 0;
-    size_t len2 = s2 ? ft_strlen(s2) : 0;
-    char *new_str = (char *)malloc(len1 + len2 + 1);
-
-    if (!new_str)
-        return (NULL);
-    
-    size_t i = 0;
-    if (s1)
-    {
-        while (s1[i])
-        {
-            new_str[i] = s1[i];
-            i++;
-        }
-        free(s1); // Free old buffer to prevent memory leaks
-    }
-    
-    size_t j = 0;
-    while (s2 && s2[j])
-        new_str[i++] = s2[j++];
-    
-    new_str[i] = '\0';
-    return (new_str);
-}
-
-/*
- * Duplicates a string safely.
- * Ensures the allocated memory is properly copied and null-terminated.
- */
-char *ft_strdup(const char *s)
-{
-    size_t len = ft_strlen(s);
-    char *dup = (char *)malloc(len + 1);
-
-    if (!dup)
-        return (NULL);
-    
-    ft_strlcpy(dup, s, len + 1);
-    return (dup);
-}
-
-/*
- * Copies a string with a size limit.
- * Ensures buffer safety by properly null-terminating the destination.
- */
-size_t ft_strlcpy(char *dst, const char *src, size_t dstsize)
-{
-    size_t i = 0;
-
-    if (!dst || !src)
-        return (0);
-    
-    while (i + 1 < dstsize && src[i])
-    {
-        dst[i] = src[i];
-        i++;
-    }
-    
-    if (dstsize > 0)
-        dst[i] = '\0';
-    
-    return (ft_strlen(src));
+	while (buf[i])
+	{
+		if (buf[i] == '\n')
+			return (i + 1);
+		i++;
+	}
+	return (0);
 }
