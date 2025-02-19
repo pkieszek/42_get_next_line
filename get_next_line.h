@@ -6,7 +6,7 @@
 /*   By: pkieszek <pkieszek@student.42warsaw.pl>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/19 02:34:13 by pkieszek          #+#    #+#             */
-/*   Updated: 2025/02/19 15:24:30 by pkieszek         ###   ########.fr       */
+/*   Updated: 2025/02/19 16:19:09 by pkieszek         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,12 @@
 # include <stdlib.h>
 # include <unistd.h>
 
-char	*get_next_line(int fd);
-char	*ft_strjoin(char *s1, char *s2);
-char	*ft_strchr(char *s, int c);
-size_t	ft_strlen(const char *s);
-char	*ft_substr(char *s, unsigned int start, size_t len);
+char    *get_next_line(int fd);
+char    *ft_strjoin(char *s1, char *s2);
+char    *ft_strchr(const char *s, int c);
+size_t  ft_strlen(const char *s);
+char    *ft_substr(char *s, unsigned int start, size_t len);
+char    *ft_strdup(const char *s);
+size_t  ft_strlcpy(char *dst, const char *src, size_t dstsize);
 
 #endif
